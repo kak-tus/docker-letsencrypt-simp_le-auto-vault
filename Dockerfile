@@ -6,7 +6,7 @@ ENV VAULT_TOKEN=
 
 ENV VAULT_PATH=secret/certificates
 
-COPY store /etc/periodic/15min/store
+COPY store /etc/periodic/hourly/store
 COPY vault_0.6.1_SHA256SUMS /usr/local/bin/vault_0.6.1_SHA256SUMS
 
 RUN apk add --no-cache curl bash \
