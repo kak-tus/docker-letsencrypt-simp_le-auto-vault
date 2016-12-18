@@ -11,7 +11,7 @@ for FILE in $FILES; do
       TYPE=$(echo $FILE | awk 'BEGIN { FS = "_" } ; { print $1 }')
       HOST=$(echo $FILE | sed "s/^${TYPE}_//" | sed "s/\.pem$//" )
 
-      rm /tmp/storefile
+      rm /tmp/storefile >/dev/null 2>/dev/null
       vault read -field=value $VAULT_PATH/$HOST/$TYPE > /tmp/storefile
       different=$( cmp -s /tmp/storefile $FILE || echo 1 )
 
@@ -20,7 +20,7 @@ for FILE in $FILES; do
         cat $FILE | vault write $VAULT_PATH/$HOST/$TYPE value=- ttl=86400
       fi
 
-      rm /tmp/storefile
+      rm /tmp/storefile >/dev/null 2>/dev/null
     fi
   fi
 done
