@@ -1,24 +1,57 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-cd $CERTS_DIR
+cd "$CERTS_DIR"
 
-FILES=$(ls *.pem)
+files=$(ls *.pem)
 
-for FILE in $FILES; do
-  size=$(wc -c <"$FILE" )
-  if [ $size -gt 100 ]; then
-    if [[ $FILE == *"_"* ]]; then
-      TYPE=$(echo $FILE | awk 'BEGIN { FS = "_" } ; { print $1 }')
-      HOST=$(echo $FILE | sed "s/^${TYPE}_//" | sed "s/\.pem$//" )
+for file in $files; do
+  size=$(wc -c <"$file" )
 
-      rm /tmp/storefile >/dev/null 2>/dev/null
-      vault read -field=value $VAULT_PATH/$HOST/$TYPE > /tmp/storefile
-      different=$( cmp -s /tmp/storefile $FILE || echo 1 )
+  if [ "$size" -gt 100 ]; then
+    if [ -n $( echo "$file" | fgrep '_' ) ]; then
+      vault token-renew > /dev/null
 
-      if [ -n "$different" ]; then
-        echo "Store $FILE to $VAULT_PATH/$HOST/$TYPE"
-        cat $FILE | vault write $VAULT_PATH/$HOST/$TYPE value=- ttl=86400
+      if [ "$?" != "0" ]; then
+        echo "Unsuccessfull renew access to vault"
+        exit
       fi
+
+      TYPE=$(echo "$file" | awk 'BEGIN { FS = "_" } ; { print $1 }')
+      HOST=$(echo "$file" | sed "s/^${TYPE}_//" | sed "s/\.pem$//" )
+
+      stored=""
+
+      while [ -z "$stored" ]; do
+        rm /tmp/storefile >/dev/null 2>/dev/null
+        vault read -field=value "$VAULT_PATH/$HOST/$TYPE" > /tmp/storefile
+
+        if [ "$?" != "0" ]; then
+          echo "Unsuccessfull read access to vault"
+          exit
+        fi
+
+        different=$( cmp -s /tmp/storefile "$file" || echo 1 )
+
+        if [ -n "$different" ]; then
+          echo "Store $file to $VAULT_PATH/$HOST/$TYPE"
+
+          cat "$file" | vault write "$VAULT_PATH/$HOST/$TYPE" value=- ttl=1d
+
+          if [ "$?" != "0" ]; then
+            echo "Unsuccessfull write access to vault"
+            exit
+          fi
+
+          sleep 2
+        else
+          echo "Equal"
+          stored="1"
+        fi
+
+      done
+
+      echo "Stored $file"
+      rm "$file"
 
       rm /tmp/storefile >/dev/null 2>/dev/null
     fi
