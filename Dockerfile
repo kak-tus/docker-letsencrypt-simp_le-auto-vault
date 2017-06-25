@@ -22,6 +22,6 @@ ENV VAULT_TOKEN=
 
 ENV VAULT_PATH=secret/certificates
 
-COPY store /etc/periodic/hourly/store
+COPY store /etc/periodic/15min/store
 
 CMD ["crond", "-f"]
