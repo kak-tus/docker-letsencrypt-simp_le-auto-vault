@@ -22,6 +22,17 @@ for file in $files; do
       stored=""
 
       while [ -z "$stored" ]; do
+        echo "Store $file to $VAULT_PATH/$HOST/$TYPE"
+
+        cat "$file" | vault write "$VAULT_PATH/$HOST/$TYPE" value=- ttl=1d
+
+        if [ "$?" != "0" ]; then
+          echo "Unsuccessfull write access to vault"
+          exit
+        fi
+
+        sleep 2
+
         rm /tmp/storefile >/dev/null 2>/dev/null
         vault read -field=value "$VAULT_PATH/$HOST/$TYPE" > /tmp/storefile
 
@@ -33,16 +44,7 @@ for file in $files; do
         different=$( cmp -s /tmp/storefile "$file" || echo 1 )
 
         if [ -n "$different" ]; then
-          echo "Store $file to $VAULT_PATH/$HOST/$TYPE"
-
-          cat "$file" | vault write "$VAULT_PATH/$HOST/$TYPE" value=- ttl=1d
-
-          if [ "$?" != "0" ]; then
-            echo "Unsuccessfull write access to vault"
-            exit
-          fi
-
-          sleep 2
+          echo "Different"
         else
           echo "Equal"
           stored="1"
