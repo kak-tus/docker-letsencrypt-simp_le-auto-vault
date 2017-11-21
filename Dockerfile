@@ -1,7 +1,7 @@
 FROM alpine:3.6
 
-ENV VAULT_VERSION=0.7.3
-ENV VAULT_SHA256=2822164d5dd347debae8b3370f73f9564a037fc18e9adcabca5907201e5aab45
+ENV VAULT_VERSION=0.9.0
+ENV VAULT_SHA256=801ce0ceaab4d2e59dbb35ea5191cfe8e6f36bb91500e86bec2d154172de59a4
 
 RUN \
   apk add --no-cache --virtual .build-deps \
@@ -23,5 +23,6 @@ ENV VAULT_TOKEN=
 ENV VAULT_PATH=secret/certificates
 
 COPY store /etc/periodic/15min/store
+COPY renew /etc/periodic/weekly/renew
 
 CMD ["crond", "-f"]

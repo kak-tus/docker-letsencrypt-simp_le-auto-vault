@@ -9,13 +9,6 @@ for file in $files; do
 
   if [ "$size" -gt 100 ]; then
     if [ -n $( echo "$file" | fgrep '_' ) ]; then
-      vault token-renew > /dev/null
-
-      if [ "$?" != "0" ]; then
-        echo "Unsuccessfull renew access to vault"
-        exit
-      fi
-
       TYPE=$(echo "$file" | awk 'BEGIN { FS = "_" } ; { print $1 }')
       HOST=$(echo "$file" | sed "s/^${TYPE}_//" | sed "s/\.pem$//" )
 

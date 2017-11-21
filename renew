@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+vault token-renew > /dev/null
+
+if [ "$?" != "0" ]; then
+  echo "Unsuccessfull renew access to vault"
+  exit
+fi
+
